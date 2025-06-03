@@ -1,0 +1,60 @@
+name: Test and Deploy to Server
+
+# Trigger the workflow on push or pull request to the master branch
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  # Job to run tests
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Node.js (or replace with your own environment setup)
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run tests
+      - name: Run tests
+        run: npm test
+
+  # Job to deploy code to server
+  deploy:
+    needs: test  # Ensure tests pass before deploying
+    runs-on: ubuntu-latest
+    if: success()  # Ensure deployment runs only if tests are successful
+
+    steps:
+      # Checkout code again for the deployment process
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up SSH for deployment (adjust accordingly)
+      - name: Set up SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+
+      # Deploy to the server (replace this with your own deploy commands)
+      - name: Deploy code
+        run: |
+          # Example deploy command
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} "cd /path/to/your/app && git pull && npm install && pm2 restart your-app"
